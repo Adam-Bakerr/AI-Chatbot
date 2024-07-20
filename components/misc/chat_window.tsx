@@ -51,9 +51,10 @@ const ChatWindow: React.FC = () => {
       try{
           completion = await openai.chat.completions.create({
           messages: chatHistory,
-          model: "gpt-3.5-turbo",
+          model: "gpt-4-turbo",
       });
       }catch(error){
+
         addBotMessage("Failed To Generate A Response,\n You may have an invalid API key")
         return
       }

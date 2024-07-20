@@ -13,6 +13,7 @@ import { DropzoneOptions } from "react-dropzone";
 import { useDropzone } from 'react-dropzone';
 import { promises as fs } from 'fs';
 import { SaveCurrentContext } from "@/components/misc/button_functions"
+import pdfToText from 'react-pdftotext'
 
 //Read The Contents Of Any Given File
 export function parse(file: File){
@@ -29,7 +30,16 @@ export function parse(file: File){
     reader.onerror = function(e: any) {
       reject(e);
     };
-    reader.readAsText(file);
+
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    console.log(extension);
+
+    let contents : string = "";
+
+    if(extension == 'pdf') {
+      pdfToText(file).then(text => {ressolve(text)});
+    }
+    else if (extension == 'txt') reader.readAsText(file);
   });
 }
 
