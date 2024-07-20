@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 
 export function SaveCurrentContext(dataToSave : string, filename : string){
     let currentContext : string[] = GetCurrentContext();
+    console.log(dataToSave)
     currentContext.push(filename + "\n" + dataToSave);
     sessionStorage.setItem("CurrentContext",JSON.stringify(currentContext));
 }

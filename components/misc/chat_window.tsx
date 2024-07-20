@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import OpenAI from 'openai';
 import { GetCurrentContextAsString } from './button_functions';
-
+import { Input } from "@/components/ui/input"
+import { error } from 'console';
 
 interface Message {
   id: number;
@@ -10,7 +11,7 @@ interface Message {
   sender: 'user' | 'bot';
 }
 
-const openai = new OpenAI({apiKey: "", dangerouslyAllowBrowser: true});
+let openai : OpenAI | null = null;
 let chatHistory : OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
 chatHistory.push({role: 'system', content: GetCurrentContextAsString()});
 
@@ -18,11 +19,14 @@ chatHistory.push({role: 'system', content: GetCurrentContextAsString()});
 const ChatWindow: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>('');
+  const [APIKEY, setAPIKEY] = useState<string>('');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
 
-
   const handleSend = () => {
+      openai = new OpenAI({apiKey: APIKEY, dangerouslyAllowBrowser: true})
+      chatHistory[0] = {role: 'system', content: GetCurrentContextAsString()};
+
     if (input.trim()) {
       const newMessage: Message = {
         id: Date.now(),
@@ -42,14 +46,26 @@ const ChatWindow: React.FC = () => {
 
   chatHistory.push({ role: "system", content: input });
   console.log(chatHistory);
-  const completion = await openai.chat.completions.create({
-    messages: chatHistory,
-    model: "gpt-3.5-turbo",
-  });
-  let message = completion.choices[0].message.content;
-  chatHistory.push(completion.choices[0].message);
-  if(message)addBotMessage(message);
-  else addBotMessage("Failed To Generate A Response")
+    if(openai != null){
+      let completion;
+      try{
+          completion = await openai.chat.completions.create({
+          messages: chatHistory,
+          model: "gpt-3.5-turbo",
+      });
+      }catch(error){
+        addBotMessage("Failed To Generate A Response,\n You may have an invalid API key")
+        return
+      }
+      if(completion != undefined){
+        let message = completion.choices[0].message.content;
+        chatHistory.push(completion.choices[0].message);
+        if(message)addBotMessage(message);
+        else addBotMessage("Failed To Generate A Response")
+      }
+
+  }
+
 }
 
   const addBotMessage = (messageText: string) => {
@@ -62,32 +78,13 @@ const ChatWindow: React.FC = () => {
     console.log(newMessage.id);
   };
 
-  // async function getResponse(question : string){
-  //   const completion = await openai.chat.completions.create({
-  //   messages: [{ role: "system", content: question }],
-  //   model: "gpt-4o-mini",
-  // });
-
-
-
-  //   const message = completion.choices[0].message.content;
-  //   if(message) addBotMessage(message);
-  // }
-
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-//     useEffect(() => {
-//     const interval = setInterval(() => {
-//       addBotMessage(`Simulated message ${messages.length + 1}`);
-//     }, 50); // Simulated user sends a message every 5 seconds
-
-//     return () => clearInterval(interval);
-//   }, [messages.length]);
-
   return (
     <div style={styles.chatContainer}>
+      <Input onChange={() => {}} placeholder={"Insert API Key"} value={APIKEY} onChangeCapture={(value) => setAPIKEY(value.currentTarget.value)}/>
       <div style={styles.chatBox}>
         {messages.map((message, idx) => (
           <div key={message.id} style={message.sender === 'user' ? styles.userMessage : styles.botMessage}>
@@ -104,7 +101,6 @@ const ChatWindow: React.FC = () => {
           style={styles.input}
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleSend();
-
           }}
         />
         <button onClick={

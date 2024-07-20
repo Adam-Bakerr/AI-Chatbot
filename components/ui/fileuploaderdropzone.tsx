@@ -58,9 +58,10 @@ const FileUploadDropzone = () => {
       value={files}
       onValueChange={onDrop}
       dropzoneOptions={dropzone}
+      className="justify-center"
     >
       <FileInput>
-        <div className="flex items-center justify-center h-32 w-full border bg-background rounded-md">
+        <div className="flex items-center justify-center h-32 w-[70vw] border bg-background rounded-md ">
           <p className="text-gray-400">Click Or Drop Files Here</p>
         </div>
       </FileInput>
